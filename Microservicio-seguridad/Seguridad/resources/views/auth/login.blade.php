@@ -69,6 +69,7 @@
         </form>
 
         <p>¿No tienes cuenta? <a href="{{ url('/registro') }}">Regístrate</a></p>
+        <p><a href="{{ url('/forgot-password') }}">¿Olvidaste tu contraseña?</a></p>
     </div>
 </body>
 </html>

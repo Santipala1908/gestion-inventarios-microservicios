@@ -99,5 +99,39 @@ public function logoutWeb(Request $request)
     auth()->logout();
     return redirect('/login')->with('success', 'Sesión cerrada correctamente');
 }
+public function sendResetLink(Request $request)
+{
+    $request->validate(['email' => 'required|email']);
+
+    $status = Password::sendResetLink($request->only('email'));
+
+    return $status === Password::RESET_LINK_SENT
+                ? back()->with('success', 'Enlace de recuperación enviado a tu correo.')
+                : back()->withErrors(['email' => 'No pudimos enviar el enlace']);
+}
+
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email',
+        'password' => 'required|min:6|confirmed',
+    ]);
+
+    $status = Password::reset(
+        $request->only('email', 'password', 'password_confirmation', 'token'),
+        function ($user, $password) {
+            $user->password = Hash::make($password);
+            $user->save();
+
+            Auth::login($user); // opcional: loguear automáticamente
+        }
+    );
+
+    return $status === Password::PASSWORD_RESET
+                ? redirect('/dashboard')->with('success', 'Contraseña restablecida')
+                : back()->withErrors(['email' => 'El token no es válido']);
+}
 
 }
+

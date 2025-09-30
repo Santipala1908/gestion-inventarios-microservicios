@@ -28,3 +28,9 @@ Route::post('/logout', [AuthController::class, 'logoutWeb']);
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware('auth'); 
+
+Route::view('/forgot-password', 'auth.forgot');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink']);
+
+Route::view('/reset-password/{token}', 'auth.reset')->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
