@@ -1,0 +1,6 @@
+flask
+pymongo
+requests
+reportlab
+pandas
+openpyxl
