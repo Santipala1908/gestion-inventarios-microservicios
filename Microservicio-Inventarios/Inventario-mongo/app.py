@@ -2,11 +2,9 @@ from flask import Flask, request, jsonify
 from datetime import datetime
 from pymongo import MongoClient, ASCENDING
 import os, requests
-from bson import ObjectId  # 👈 necesario para convertir ObjectId
+from bson import ObjectId  
 
-# =======================
-# CONFIGURACIÓN BASE
-# =======================
+
 MONGO_URI    = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DBNAME = os.getenv("MONGO_DB", "inventory_db")
 PRODUCTS_URL = os.getenv("PRODUCTS_URL", "http://localhost:8000/api")
@@ -18,9 +16,7 @@ app = Flask(__name__)
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DBNAME]
 
-# =======================
-# ÍNDICES
-# =======================
+
 db[COL_BAL].create_index([("product_id", ASCENDING), ("warehouse_id", ASCENDING)], unique=True)
 db[COL_MOV].create_index([("product_id", ASCENDING), ("warehouse_id", ASCENDING), ("created_at", ASCENDING)])
 
@@ -28,10 +24,6 @@ db[COL_MOV].create_index([("product_id", ASCENDING), ("warehouse_id", ASCENDING)
 def now_utc():
     return datetime.utcnow()
 
-
-# =======================
-# FUNCIONES AUXILIARES
-# =======================
 def ensure_balance(product_id: str, warehouse_id: str, sku_snapshot: str | None = None):
     base = {"on_hand": 0, "reserved": 0}
     if sku_snapshot is not None:
@@ -68,7 +60,7 @@ def resolve_product(product_id: str | None, sku: str | None):
         return None, "catalog_unavailable"
 
 
-# 🔧 función auxiliar para limpiar ObjectId y datetime
+
 def clean_doc(doc):
     """Convierte ObjectId y datetime a string antes de enviar JSON"""
     clean = {}
@@ -82,9 +74,6 @@ def clean_doc(doc):
     return clean
 
 
-# =======================
-# ENDPOINTS
-# =======================
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -115,15 +104,10 @@ def list_movements():
 
 @app.post("/inventory/movements")
 def create_movement():
-    """
-    Acepta:
-      - Por ID:  { "product_id": 25, "type":"IN", "qty":10, "warehouse_id":"MAIN" }
-      - Por SKU: { "sku":"SKU-001", "type":"RESERVE", "qty":3, "warehouse_id":"MAIN" }
-    Reglas: IN | OUT | RESERVE | RELEASE
-    """
+    
     b = request.get_json(force=True)
 
-    # Validación de entrada
+    
     try:
         mtype = str(b["type"]).upper()
         qty   = int(b["qty"])
@@ -138,19 +122,19 @@ def create_movement():
     ref_t = b.get("ref_type")
     ref_i = b.get("ref_id")
 
-    # Resolver producto contra Products
+    
     raw_pid = b.get("product_id")
     raw_sku = b.get("sku")
     resolved, err = resolve_product(str(raw_pid) if raw_pid is not None else None,
                                     str(raw_sku) if raw_sku else None)
     if err:
         return {"error": err}, 422
-    pid, sku_snapshot = resolved  # pid como string
+    pid, sku_snapshot = resolved  
 
-    # Asegurar documento de saldos
+    
     ensure_balance(pid, wh, sku_snapshot)
 
-    # Operaciones atómicas
+
     if mtype == "IN":
         db[COL_BAL].update_one(
             {"product_id": pid, "warehouse_id": wh},
@@ -174,7 +158,7 @@ def create_movement():
         )
         if res.matched_count != 1:
             return {"error":"insufficient_available"}, 409
-    else:  # RELEASE
+    else:  
         res = db[COL_BAL].update_one(
             {"product_id": pid, "warehouse_id": wh, "reserved": {"$gte": qty}},
             {"$inc": {"reserved": -qty}}
@@ -182,7 +166,7 @@ def create_movement():
         if res.matched_count != 1:
             return {"error":"insufficient_reserved"}, 409
 
-    # Registrar movimiento
+    
     mv = {
         "product_id": pid,
         "warehouse_id": wh,
@@ -198,13 +182,5 @@ def create_movement():
 
     return jsonify(clean_doc(mv)), 201
 
-
-# =======================
-# MAIN
-# =======================
 if __name__ == "__main__":
-    # Usa env vars para apuntar a tus servicios reales
-    #   MONGO_URI="mongodb://localhost:27017"
-    #   MONGO_DB="inventory_db"
-    #   PRODUCTS_URL="http://localhost:8000/api"
     app.run(debug=True, port=int(os.getenv("PORT", 8003)))

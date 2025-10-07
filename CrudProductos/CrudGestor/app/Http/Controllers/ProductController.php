@@ -7,7 +7,7 @@ use App\Models\Product;
 
 class ProductController extends Controller
 {
-    // metodos web
+    
     public function index()
     {
         $products = Product::all();
@@ -62,7 +62,6 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Producto eliminado con éxito');
     }
 
-    //metodos api
     public function apiIndex()
     {
         return response()->json(Product::all());

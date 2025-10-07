@@ -8,9 +8,6 @@ import pandas as pd
 import os, requests
 from bson import ObjectId
 
-# =======================
-# CONFIGURACIÓN
-# =======================
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.getenv("MONGO_DB", "inventory_db")
 PRODUCTS_URL = os.getenv("PRODUCTS_URL", "http://localhost:8000/api")
@@ -19,9 +16,6 @@ app = Flask(__name__)
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 
-# =======================
-# FUNCIONES AUXILIARES
-# =======================
 def clean_doc(doc):
     """Convierte ObjectId y datetime a string"""
     out = {}
@@ -44,10 +38,6 @@ def fetch_product(pid: str):
         pass
     return {"name": "Desconocido", "category": "-", "price": 0}
 
-
-# =======================
-# REPORTES EN PDF
-# =======================
 @app.get("/reports/inventory/pdf")
 def report_inventory_pdf():
     """Genera PDF con resumen del inventario"""
@@ -70,10 +60,6 @@ def report_inventory_pdf():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="reporte_inventario.pdf", mimetype="application/pdf")
 
-
-# =======================
-# REPORTES EN EXCEL
-# =======================
 @app.get("/reports/inventory/excel")
 def report_inventory_excel():
     """Genera Excel con resumen del inventario"""
@@ -98,9 +84,6 @@ def report_inventory_excel():
     return send_file(buffer, as_attachment=True, download_name="reporte_inventario.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
-# =======================
-# REPORTES DE USUARIOS / VENTAS (simulados)
-# =======================
 @app.get("/reports/users/excel")
 def report_users_excel():
     """Reporte de usuarios (ejemplo: obtenido del microservicio de seguridad)"""
@@ -138,10 +121,6 @@ def report_sales_pdf():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="ventas.pdf", mimetype="application/pdf")
 
-
-# =======================
-# MAIN
-# =======================
 @app.get("/health")
 def health():
     return {"status": "ok"}

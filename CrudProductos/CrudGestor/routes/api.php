@@ -32,7 +32,7 @@ Route::get('/products/exists', function () {
     ]);
 });
 
-// 🔎 Validación por ID
+// Validación por ID
 Route::get('/products/{id}/exists', function ($id) {
     $p = Product::select('id','sku')->find($id);
     return response()->json([
