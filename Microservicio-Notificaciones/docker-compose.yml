@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  notifications:
+    build: .
+    container_name: ms-notificaciones
+    # Cargamos las variables desde tu archivo .env local
+    env_file:
+      - .env
+    ports:
+      - "8005:8005"   # host:container
