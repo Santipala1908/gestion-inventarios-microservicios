@@ -183,4 +183,4 @@ def create_movement():
     return jsonify(clean_doc(mv)), 201
 
 if __name__ == "__main__":
-    app.run(debug=True, port=int(os.getenv("PORT", 8003)))
+    app.run(host="0.0.0.0", debug=True, port=int(os.getenv("PORT", 8003)))

@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  inventory:
+    build: .
+    container_name: inventario_microservicio
+    restart: always
+    ports:
+      - "8003:8003"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+      - MONGO_DB=inventory_db
+      - PRODUCTS_URL=http://laravel_crud/api
+    networks:
+      - micro_net
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo_inventario
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - micro_net
+
+networks:
+  micro_net:
+
+volumes:
+  mongo_data:
