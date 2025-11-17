@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_crud
+    restart: always
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=microservicio-crud
+      - DB_USERNAME=root
+      - DB_PASSWORD=
+    networks:
+      - laravel_net
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_crud
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: microservicio-crud
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - laravel_net
+
+networks:
+  laravel_net:
+
+volumes:
+  db_data:
